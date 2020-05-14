@@ -6,7 +6,7 @@
 python3 -m pip install pygame numpy --user
 ```
 
-Run `python3 fractal.py`
+Run `python3 __main__.py`
 
 ### Rule 30
 
