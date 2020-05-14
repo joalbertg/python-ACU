@@ -4,39 +4,38 @@ import time
 
 spg = screen_pg.ScreenPg()
 spg.beggin()
+spg.set_title('Autómatas Celulares: Fractal')
 
-# spg.pg.display.set_caption('Autómatas Celulares: Fractal')
-spg.pg.display.set_caption('Autómatas Celulares: Fractal')
+class Fractal:
+    def __init__(self, sleep = 0.01, nxC = 500, nyC = 500, width = 500, height = 500):
+        self.sleep = sleep
+        self.nxC = nxC
+        self.nyC = nyC
+        self.dimCW = width / self.nxC
+        self.dimCH = height / self.nyC
 
-nxC, nyC = 500, 500
+    def up_height(self, height):
+        self.nyC = fr.nyC + 10
+        self.dimCH = height / self.nyC
 
-dimCW = spg.width / nxC
-dimCH = spg.height / nyC
+    def down_height(self, height):
+        self.nyC = fr.nyC - 10
+        self.dimCH = height / self.nyC
 
-# Estado de las celdas. Vivas = 1, Muertas = 0.
-gameState = np.zeros((nxC, nyC))
+    def left_width(self, width):
+        self.nxC = fr.nxC - 10
+        self.dimCW = width / self.nxC
 
-def __incNyC__(gameState):
-    gameState = np.zeros((nxC, nyC))
-    gameState[int(nxC / 2), 0] = 1
-    spg.screen.fill(spg.bg)
+    def right_width(self, width):
+        self.nxC = fr.nxC + 10
+        self.dimCW = width / self.nxC
 
-    return gameState
+fr = Fractal()
 
-gameState[int(nxC / 2), 0] = 1
-# Para regla 110
-# gameState[nxC -1 , 0] = 1
-# Para regla 124
-# gameState[0, 0] = 1
+def reset_cell():
+    # Estado de las celdas. Vivas = 1, Muertas = 0.
+    return np.zeros((fr.nxC, fr.nyC))
 
-# Control de la ejecución del juego.
-pauseExect = False
-sleep = 0.01
-rule = 30
-# rule = 110
-# rule = 124
-# rule = 150
-# rule = 90
 def __log__(msg):
     print('Log:', msg)
 
@@ -45,14 +44,28 @@ def __binary_rule__(rule):
     __log__(rule)
     return np.flip(list(strRule))
 
+def __incNyC__(gameState):
+    gameState = reset_cell()
+    gameState[int(fr.nxC / 2), 0] = 1
+    spg.screen.fill(spg.bg)
+    return gameState
+
+# Control de la ejecución del juego.
+pauseExect = False
+rule = 30
+# rule = 110
+# rule = 124
+# rule = 150
+# rule = 90
+
+gameState = reset_cell()
+gameState[int(fr.nxC / 2), 0] = 1
+# Para regla 110
+# gameState[nxC -1 , 0] = 1
+# Para regla 124
+# gameState[0, 0] = 1
+
 vectorRule = __binary_rule__(rule)
-def exit_event(ev):
-    for event in ev:
-        # Detectamos si se presiona esc o hacen click sobre close.
-        if (event.type == spg.pg.KEYDOWN and event.key == spg.pg.K_ESCAPE) \
-        or (event.type == spg.pg.QUIT):
-            spg.pg.quit()
-            exit()
 
 x, y = 0, 0
 # Para seguir calculando y pintando al reanudar.
@@ -61,48 +74,42 @@ painted = False
 from sys import exit
 # Bucle de ejecición.
 # while True:
-while y < nyC or spg.running:
+
+
+while y < fr.nyC or spg.running:
     # Detenemos la ejecución si ya se terminó de pintar.
-    if y == nyC:
+    if y == fr.nyC:
         painted = True
     # Registramos eventos de teclado y ratón.
-    ev = spg.pg.event.get()
-
-    exit_event(ev)
+    ev = spg.get_event()
+    spg.event_close(ev)
 
     restart = False
     for event in ev:
-        if event.type == spg.pg.KEYDOWN:
+        if spg.event_keydown(event.type):
             key = event.key
 
-            if key == spg.pg.K_UP or key == spg.pg.K_DOWN or key == spg.pg.K_LEFT or key == spg.pg.K_RIGHT \
-                    or key == spg.pg.K_n or key == spg.pg.K_m:
+            if spg.is_key(key):
                 restart = True
                 mods = spg.pg.key.get_mods()
 
                 if key == spg.pg.K_UP:
-                    nyC = nyC + 10
-                    dimCH = spg.height / nyC
+                    fr.up_height(spg.height)
                 elif key == spg.pg.K_DOWN:
-                    nyC = nyC - 10
-                    dimCH = spg.height / nyC
+                    fr.down_height(spg.height)
                 elif key == spg.pg.K_LEFT:
-                    nxC = nxC - 10
-                    dimCW = spg.width / nxC
+                    fr.left_width(spg.width)
                 elif key == spg.pg.K_RIGHT:
-                    nxC = nxC + 10
-                    dimCW = spg.width / nxC
-                elif key == spg.pg.K_n:
+                    fr.right_width(spg.width)
+                elif key == spg.pg.K_n or key == spg.pg.K_m:
                     if mods & spg.pg.KMOD_LSHIFT or mods & spg.pg.KMOD_CAPS:
-                        rule += 1
-                    else:
+                        if key == spg.pg.K_n:
+                            rule += 1
+                        elif key == spg.pg.K_m:
+                            rule += 10
+                    elif key == spg.pg.K_n:
                         rule -= 1
-
-                    vectorRule = __binary_rule__(rule)
-                elif key == spg.pg.K_m:
-                    if mods & spg.pg.KMOD_LSHIFT or mods & spg.pg.KMOD_CAPS:
-                        rule += 10
-                    else:
+                    elif key == spg.pg.K_m:
                         rule -= 10
 
                     vectorRule = __binary_rule__(rule)
@@ -115,7 +122,7 @@ while y < nyC or spg.running:
     if not painted or not restart:
         for event in ev:
             # Detectamos si se presiona una tecla.
-            if event.type == spg.pg.KEYDOWN and event.key == spg.pg.K_SPACE:
+            if spg.event_keydown(event.type) and event.key == spg.pg.K_SPACE:
                 pauseExect = not pauseExect
 
                 if auxX == 0 and auxY == 0:
@@ -125,26 +132,26 @@ while y < nyC or spg.running:
                     auxX, auxY = 0, 0
 
         if not pauseExect:
-            time.sleep(sleep)
+            time.sleep(fr.sleep)
 
-            for x in range(0, nxC):
+            for x in range(0, fr.nxC):
                 # Encontramos los vecinos cercanos, (x-1, y)/(x+1, y).
-                xLeft   = int(gameState[(x - 1) % nxC, (y) % nyC])
-                xOrigin = int(gameState[(x)     % nxC, (y) % nyC])
-                xRight  = int(gameState[(x + 1) % nxC, (y) % nyC])
+                xLeft   = int(gameState[(x - 1) % fr.nxC, (y) % fr.nyC])
+                xOrigin = int(gameState[(x)     % fr.nxC, (y) % fr.nyC])
+                xRight  = int(gameState[(x + 1) % fr.nxC, (y) % fr.nyC])
 
                 vicinity = "%s%s%s" % (xLeft, xOrigin, xRight)
                 cell = int(vectorRule[int(vicinity, 2)])
 
                 if cell:
-                    gameState[(x) % nxC, (y + 1) % nyC] = 1
+                    gameState[(x) % fr.nxC, (y + 1) % fr.nyC] = 1
 
-                    # Creamos el polígono de cada celda a dibujar.
-                    poly = [((x)     * dimCW, y       * dimCH),
-                            ((x + 1) * dimCW, y       * dimCH),
-                            ((x + 1) * dimCW, (y + 1) * dimCH),
-                            ((x)     * dimCW, (y + 1) * dimCH)]
+                    # Creamos el polfr.ígono de cada celda a dibujar.
+                    poly = [((x)     * fr.dimCW, y       * fr.dimCH),
+                            ((x + 1) * fr.dimCW, y       * fr.dimCH),
+                            ((x + 1) * fr.dimCW, (y + 1) * fr.dimCH),
+                            ((x)     * fr.dimCW, (y + 1) * fr.dimCH)]
                     # Y dibujamos la celda para el par de x e y.
-                    spg.pg.draw.polygon(spg.screen, (128, 128, 128), poly, 1)
-            spg.pg.display.flip()
+                    spg.draw_polygon((128, 128, 128), poly)
+            spg.update()
             y += 1
