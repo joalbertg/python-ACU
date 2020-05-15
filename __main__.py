@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import fractal
 import screen_pg
 import event_pg
@@ -6,7 +8,7 @@ import time
 spg = screen_pg.ScreenPg()
 epg = event_pg.EventPg(spg.pg)
 spg.beggin()
-spg.set_title('Autómatas Celulares: Fractal')
+spg.set_title('Cellular Automata: Fractal')
 
 fr = fractal.Fractal(width = spg.width, height = spg.height)
 
