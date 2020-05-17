@@ -26,8 +26,8 @@ class ScreenPg:
     def set_title(self, title):
         self.pg.display.set_caption(title)
 
-    def draw_polygon(self, color, poins):
-        self.pg.draw.polygon(self.screen, color, poins, 1)
+    def draw_polygon(self, color, poins, fill = True):
+        self.pg.draw.polygon(self.screen, color, poins, fill)
 
     def update(self):
         self.pg.display.flip()
